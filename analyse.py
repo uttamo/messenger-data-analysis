@@ -12,11 +12,11 @@ DEFAULT_INBOX_PATH = os.path.join('data', 'messages', 'inbox')
 
 
 class MessengerData:
-    def __init__(self, chat_path: str):
-        self.chat_id = os.path.basename(chat_path)
-        messages_file = self._load_messages_file(chat_path)
+    def __init__(self, chat_dir_path: str):
+        self.chat_id = os.path.basename(chat_dir_path)
+        messages_file = self._load_messages_file(chat_dir_path)
         self.df = self._load_messages_df(messages_file)
-        self.chat_type = messages_file['thread_type']  # 'RegularGroup', 'Regular'
+        self.type = self._determine_chat_type(messages_file['thread_type'])  # 'RegularGroup', 'Regular'
         self.chat_title = messages_file['title']
 
     def _load_messages_file(self, chat_path: str) -> dict:
@@ -53,8 +53,14 @@ class MessengerData:
         df = df[final_columns]
         return df
 
+    def _determine_chat_type(self, thread_type: str) -> str:
+        chat_types = {'Regular': 'Regular', 'RegularGroup': 'Group'}
+        if thread_type not in chat_types:
+            raise NotImplementedError(f"Unrecognised thread type '{thread_type}'")
+        return chat_types[thread_type]
+
     def __repr__(self):
-        return "<MessengerData for {} (rows={})>".format(self.chat_id, len(self))
+        return "<MessengerData for '{}' (type={}, rows={})>".format(self.chat_id, self.type, len(self))
 
     def __len__(self):
         return len(self.df)
@@ -87,6 +93,3 @@ class MessengerData:
 
     def get_message_count_by_month(self):
         return self._get_message_count_by_period('M')
-
-jack = MessengerData(os.path.join('data', 'messages', 'inbox', 'JackWmpy_wK_55Entpg'))
-import pdb; pdb.set_trace()

@@ -2,11 +2,19 @@
 Analyse Messenger data JSON exports from Facebook.
 
 ## Usage
-Export Facebook messages data and store in `../data/` so the directory `../data/messages/inbox` contains directories for every conversation.
-
-##### Initialise analyser for a particular chat
+Export Facebook messages data as JSON
 ```python
-chat = MessengerData('GroupChatName_eoK-g8wEea')
+>>> import os
+>>> chat_dir = 'data/messages/inbox/GroupChatName_eoK-g8wEea'
+>>> os.listdir(chat_dir)
+['gifs', 'videos', 'files', 'photos', 'message_1.json']
+```
+##### Initialise analyser for a particular chat giving the path to the chat directory (the chat directory must contain a file called `message_1.json`)
+```python
+>>> from analyse import MessengerData
+>>> chat = MessengerData(chat_dir)
+>>> chat
+<MessengerData for 'GroupChatName_eoK-g8wEea' (type=Group, rows=9864)>
 ```
 
 ##### Dataframe of messages
