@@ -8,26 +8,25 @@ from ftfy import fix_text
 
 logging.getLogger().setLevel(logging.DEBUG)
 
-INBOX_PATH = os.path.join('..', 'data', 'messages', 'inbox')
+DEFAULT_INBOX_PATH = os.path.join('data', 'messages', 'inbox')
 
 
 class MessengerData:
-    def __init__(self, chat_id: str):
-        self.chat_id = chat_id
-        messages_file = self._load_messages_file(self.chat_id)
+    def __init__(self, chat_path: str):
+        self.chat_id = os.path.basename(chat_path)
+        messages_file = self._load_messages_file(chat_path)
         self.df = self._load_messages_df(messages_file)
         self.chat_type = messages_file['thread_type']  # 'RegularGroup', 'Regular'
         self.chat_title = messages_file['title']
 
-    def _load_messages_file(self, chat_id: str) -> dict:
-        logging.info(f"Loading messages file for '{chat_id}'")
-        messages_path = os.path.join(INBOX_PATH, chat_id)
-        assert os.path.exists(messages_path)
-        json_files = [fn for fn in os.listdir(messages_path) if fn.endswith('.json')]
+    def _load_messages_file(self, chat_path: str) -> dict:
+        logging.info(f"Loading messages file '{chat_path}'")
+        assert os.path.exists(chat_path)
+        json_files = [fn for fn in os.listdir(chat_path) if fn.endswith('.json')]
         assert len(json_files) == 1, 'There should be 1 JSON file'
         json_file = json_files[0]
         assert json_file == 'message_1.json'
-        messages_file_path = os.path.join(messages_path, json_file)
+        messages_file_path = os.path.join(chat_path, json_file)
         with open(messages_file_path, 'r') as inp:
             json_file = json.load(inp)
         return json_file
@@ -88,3 +87,6 @@ class MessengerData:
 
     def get_message_count_by_month(self):
         return self._get_message_count_by_period('M')
+
+jack = MessengerData(os.path.join('data', 'messages', 'inbox', 'JackWmpy_wK_55Entpg'))
+import pdb; pdb.set_trace()
