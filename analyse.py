@@ -17,7 +17,7 @@ class MessengerData:
         messages_file = self._load_messages_file(chat_dir_path)
         self.df = self._load_messages_df(messages_file)
         self.type = self._determine_chat_type(messages_file['thread_type'])  # 'RegularGroup', 'Regular'
-        self.chat_title = messages_file['title']
+        self.chat_title = fix_text(messages_file['title'])
 
     def _load_messages_file(self, chat_path: str) -> dict:
         logging.info(f"Loading messages file '{chat_path}'")
@@ -86,10 +86,35 @@ class MessengerData:
         return msgs_by_sender.sort_values('msg_count', ascending=False)
 
     def _get_message_count_by_period(self, period: str):
-        return self.df.groupby(pd.Grouper(key='time', freq=period)).size()
+        grouped_by_period = self.df.groupby(pd.Grouper(key='time', freq=period)).size()
+        grouped_by_period.name = self.chat_title
+        return grouped_by_period
 
     def get_message_count_by_year(self):
         return self._get_message_count_by_period('Y')
 
     def get_message_count_by_month(self):
         return self._get_message_count_by_period('M')
+
+    def get_message_count_by_day(self):
+        return self._get_message_count_by_period('D')
+
+
+class MessengerAnalyser:
+    def __init__(self, *chats):
+        assert all(type(i) is MessengerData for i in chats), 'Args for MessengerAnalyser must be of type MessengerData'
+        self.chats = chats
+        self.daily_message_counts_df = self.get_message_counts()
+
+    def get_message_counts(self) -> pd.DataFrame:
+        individual_daily_message_counts = []
+        for chat in self.chats:
+            daily_msg_count = chat.get_message_count_by_day()
+            individual_daily_message_counts.append(daily_msg_count)
+        message_counts = pd.concat(individual_daily_message_counts, axis=1).fillna(0)
+        return message_counts
+
+    def plot_message_count(self):
+        cumulative_daily_message_counts = self.daily_message_counts_df.cumsum()
+        ax = cumulative_daily_message_counts.plot(figsize=(20, 10), lw=3)
+        ax.set_ylabel('Total message count')
